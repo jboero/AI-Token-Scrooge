@@ -125,10 +125,10 @@ class Tray:
 
 # ---------------------------------------------------------------- launch at sign-in
 
-def _launch_command() -> list[str]:
-    if getattr(sys, "frozen", False):
-        return [sys.executable, "--background"]
-    return [sys.executable, "-m", "token_scrooge", "--background"]
+def _launch_command(data_dir: Optional[Path] = None) -> list[str]:
+    base = [sys.executable] if getattr(sys, "frozen", False) else [sys.executable, "-m", "token_scrooge"]
+    # Sign-in launches do not inherit shell variables, so a SCROOGE_DATA_DIR folder is written explicitly.
+    return base + ["--background"] + (["--data-dir", str(data_dir)] if data_dir is not None else [])
 
 
 def _autostart_path() -> Path:
@@ -138,14 +138,15 @@ def _autostart_path() -> Path:
     return base / "autostart" / f"{APP_ID}.desktop"
 
 
-def set_launch_at_login(enabled: bool) -> None:
-    """Write or remove the per-user autostart entry. Raises OSError when it cannot be changed."""
+def set_launch_at_login(enabled: bool, data_dir: Optional[Path] = None) -> None:
+    """Write or remove the per-user autostart entry. Raises OSError when it cannot be changed.
+    `data_dir` is included in the launch command when the folder is not the platform default."""
     path = _autostart_path()
     if not enabled:
         path.unlink(missing_ok=True)
         return
     path.parent.mkdir(parents=True, exist_ok=True)
-    command = _launch_command()
+    command = _launch_command(data_dir)
     if sys.platform == "darwin":
         data = plistlib.dumps({"Label": LAUNCH_AGENT, "ProgramArguments": command, "RunAtLoad": True,
                                "ProcessType": "Interactive"})

@@ -158,6 +158,23 @@ def default_data_dir() -> Path:
     return Path(base) / "ai-token-scrooge"
 
 
+DATA_DIR_ENV = "SCROOGE_DATA_DIR"
+
+
+def resolve_data_dir(option: Optional[Path] = None, environ: Optional[dict] = None) -> tuple[Path, str]:
+    """Choose the data folder: --data-dir, then $SCROOGE_DATA_DIR, then the platform default.
+    Returns an absolute path and its source ("option", "environment" or "default"). An empty
+    variable is ignored. Credentials stay under the platform default's Security folder, keyed by
+    the chosen folder's identity, so moving data elsewhere never shares sign-ins between folders."""
+    environ = os.environ if environ is None else environ
+    if option is not None:
+        return Path(option).expanduser().resolve(), "option"
+    value = (environ.get(DATA_DIR_ENV) or "").strip()
+    if value:
+        return Path(value).expanduser().resolve(), "environment"
+    return default_data_dir(), "default"
+
+
 def ensure_private_dir(path: Path) -> Path:
     path.mkdir(parents=True, exist_ok=True, mode=0o700)
     info = path.lstat()

@@ -73,6 +73,8 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.controller, self.tray, self.sounds = controller, tray, sounds
         self.exiting = False
+        self.autostart_allowed = True
+        self.autostart_data_dir = None  # Set when the data folder came from SCROOGE_DATA_DIR.
         self.banner: Optional[Banner] = None
         self.highlighted: Optional[str] = None
         self.setWindowTitle("AI Token Scrooge")
@@ -278,9 +280,13 @@ class MainWindow(QMainWindow):
         self.controller.remove_account(account.Id)
 
     def set_launch_at_login(self, enabled: bool) -> None:
-        """Raises OSError when the autostart entry cannot be changed; the panel reverts the switch."""
-        if not self.controller.state.is_demo:
-            desktop.set_launch_at_login(enabled)
+        """Raises OSError when the autostart entry cannot be changed; the panel reverts the switch.
+        Runs with --data-dir are isolated test folders and never change the sign-in entry."""
+        if self.controller.state.is_demo:
+            return
+        if not self.autostart_allowed:
+            raise OSError("Launch at sign-in is unavailable for a --data-dir run.")
+        desktop.set_launch_at_login(enabled, self.autostart_data_dir)
 
     def open_account(self, account_id: str, window_id: Optional[str] = None) -> None:
         state = self.controller.state
