@@ -2,6 +2,8 @@
 
 A PyQt6 port of the Windows AI Token Scrooge app. It monitors the same providers, uses the same layout and dark palette, and follows the same credential rules. The Windows app in `src/` is unchanged; this folder is self-contained.
 
+![AI Token Scrooge running on Linux with demo data](docs/screenshot-linux-demo.png)
+
 > Status: preview. The port's provider mapping, alerts, history, timeline geometry, settings and refresh orchestration are covered by fixture and offscreen tests. Live provider sign-in on macOS and Linux has not been verified yet. See [Verification Status](#verification-status).
 
 ## Requirements
